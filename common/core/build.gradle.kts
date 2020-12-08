@@ -13,6 +13,7 @@ version = rootProject.version
 val ktorVersion = "1.4.1"
 val serializationVersion = "1.0.0-RC2"
 val coroutinesVersion = "1.3.9-native-mt-2"
+val logbackVersion = "1.2.3"
 
 repositories {
     gradlePluginPortal()
@@ -37,6 +38,7 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
                 implementation("io.ktor:ktor-client-core:$ktorVersion")
+                implementation ("io.ktor:ktor-client-logging:$ktorVersion")
                 implementation("io.ktor:ktor-client-serialization:$ktorVersion")
             }
         }
@@ -49,6 +51,9 @@ kotlin {
         val androidMain by getting {
             dependencies {
                 implementation("io.ktor:ktor-client-android:$ktorVersion")
+                implementation("io.ktor:ktor-client-logging-jvm:$ktorVersion")
+                // https://ktor.io/docs/servers-logging.html
+                implementation("ch.qos.logback:logback-classic:$logbackVersion")
             }
         }
         val androidTest by getting {
@@ -60,6 +65,7 @@ kotlin {
         val iosMain by getting {
             dependencies {
                 implementation("io.ktor:ktor-client-ios:$ktorVersion")
+                // implementation("io.ktor:ktor-client-logging-native:$ktorVersion")
             }
         }
         val iosTest by getting
