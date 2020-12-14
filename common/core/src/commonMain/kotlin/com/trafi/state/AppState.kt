@@ -1,6 +1,9 @@
 package com.trafi.state
 
 import com.trafi.core.ApiResult
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 
 sealed class AppAction {
     object FactAlertDismissed : AppAction()
@@ -25,5 +28,18 @@ data class AppState(
                 ?: "Could not load a number fact",
             fetchNumberFact = false
         )
+    }
+
+    override fun reduceFlow(event: AppAction): Pair<AppState, Flow<AppAction>> {
+        val newState = reduce(event)
+        val flow = if (newState.fetchNumberFact) {
+            flow {
+                delay(1000)
+                emit(AppAction.NumberFactResponse(ApiResult.Success("Number ${newState.count} is great")))
+            }
+        } else {
+            flow {}
+        }
+        return reduce(event) to flow
     }
 }
