@@ -34,10 +34,10 @@ import com.trafi.routes.ui.internal.startTimeMillis
 import com.trafi.routes.ui.mock.RouteSegmentPreviewParameterProvider
 import com.trafi.ui.theme.MaasTheme
 
-typealias PersonalVehicleType = RouteSegmentPersonalVehicle.Vehicle
+private typealias PersonalVehicleType = RouteSegmentPersonalVehicle.Vehicle
 
 @Composable
-fun RouteSegment(segment: RouteSegment, modifier: Modifier = Modifier) {
+public fun RouteSegment(segment: RouteSegment, modifier: Modifier = Modifier) {
     when (segment.mode) {
         RouteSegment.Mode.TRANSIT -> {
             val transit = segment.transit ?: return

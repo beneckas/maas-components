@@ -37,7 +37,7 @@ import com.trafi.ui.theme.MaasTheme
 import com.trafi.ui.theme.Spacing
 
 @Composable
-fun RoutesScreen(
+public fun RoutesScreen(
     baseUrl: String,
     apiKey: String,
     regionId: String,
