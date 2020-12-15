@@ -30,16 +30,16 @@ data class AppState(
         )
     }
 
-    override fun reduceFlow(event: AppAction): Pair<AppState, Flow<AppAction>> {
+    override fun reduceFlow(event: AppAction): Pair<AppState, Effect<AppAction>> {
         val newState = reduce(event)
-        val flow = if (newState.fetchNumberFact) {
-            flow {
+        val effect = if (newState.fetchNumberFact) {
+            flow<AppAction> {
                 delay(1000)
                 emit(AppAction.NumberFactResponse(ApiResult.Success("Number ${newState.count} is great")))
-            }
+            }.effect("fetch-number ${newState.count}", cancelInFlight = true)
         } else {
-            flow {}
+            Effect.None()
         }
-        return reduce(event) to flow
+        return reduce(event) to effect
     }
 }

@@ -15,10 +15,10 @@ data class CounterState(val count: Int) : State<CounterState, CounterEvent> {
         CounterEvent.Decrement -> copy(count = count - 1)
     }
 
-    override fun reduceFlow(event: CounterEvent): Pair<CounterState, Flow<CounterEvent>> {
+    override fun reduceFlow(event: CounterEvent): Pair<CounterState, Effect<CounterEvent>> {
         return reduce(event) to flow {
             delay(500)
             emit(CounterEvent.Increment)
-        }
+        }.effect()
     }
 }
