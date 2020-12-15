@@ -2,7 +2,6 @@ package com.trafi.state
 
 import com.trafi.core.ApiResult
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
 sealed class AppAction {
@@ -18,7 +17,7 @@ data class AppState(
     val numberFactAlert: String?,
     val fetchNumberFact: Boolean = false
 ) : State<AppState, AppAction> {
-    override fun reduce(event: AppAction): AppState = when (event) {
+    private fun reduceState(event: AppAction): AppState = when (event) {
         AppAction.FactAlertDismissed -> copy(numberFactAlert = null)
         AppAction.DecrementButtonTapped -> copy(count = count - 1)
         AppAction.IncrementButtonTapped -> copy(count = count + 1)
@@ -30,16 +29,16 @@ data class AppState(
         )
     }
 
-    override fun reduceFlow(event: AppAction): Pair<AppState, Effect<AppAction>> {
-        val newState = reduce(event)
-        val effect = if (newState.fetchNumberFact) {
+    override fun reduce(event: AppAction): Pair<AppState, Effect<AppAction>> {
+        val state = reduceState(event)
+        val effect = if (state.fetchNumberFact) {
             flow<AppAction> {
                 delay(1000)
-                emit(AppAction.NumberFactResponse(ApiResult.Success("Number ${newState.count} is great")))
-            }.effect("fetch-number ${newState.count}", cancelInFlight = true)
+                emit(AppAction.NumberFactResponse(ApiResult.Success("Number ${state.count} is great")))
+            }.effect("fetch-number-fact", cancelInFlight = true)
         } else {
             Effect.None()
         }
-        return reduce(event) to effect
+        return state to effect
     }
 }

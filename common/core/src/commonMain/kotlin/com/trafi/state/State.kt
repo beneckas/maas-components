@@ -11,8 +11,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 interface State<out T : State<T, E>, E> {
-    fun reduce(event: E): T
-    fun reduceFlow(event: E): Pair<T, Effect<E>>
+    fun reduce(event: E): Pair<T, Effect<E>>
 }
 
 class StateMachine<T : State<T, E>, E>(initial: T) {
@@ -20,7 +19,7 @@ class StateMachine<T : State<T, E>, E>(initial: T) {
     val stateFlow: StateFlow<T> = _stateFlow
 
     fun transition(event: E) {
-        _stateFlow.value = _stateFlow.value.reduce(event)
+        _stateFlow.value = _stateFlow.value.reduce(event).first
     }
 }
 
@@ -36,7 +35,7 @@ class Effects<T>(val effects: List<Effect<T>>) : Effect<T>()
 fun <T> Flow<T>.effect(cancellationId: String, cancelInFlight: Boolean = false): Effect<T> = Effect.Flow(CFlow(this, cancellationId, cancelInFlight))
 fun <T> Flow<T>.effect(): Effect<T> = Effect.Flow(CFlow(this))
 
-class CFlow<T>(private val origin: Flow<T>, val cancellationKey: String? = null, val cancelInFlight: Boolean = true) : Flow<T> by origin {
+class CFlow<T>(private val origin: Flow<T>, val cancellationId: String? = null, val cancelInFlight: Boolean = true) : Flow<T> by origin {
     fun watch(block: (T) -> Unit): Closeable {
         val job = Job(/*ConferenceService.coroutineContext[Job]*/)
 

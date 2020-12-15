@@ -16,7 +16,6 @@ struct AppView: View {
 
             SwiftUI.Button("Number fact") { viewStore.send(.NumberFactButtonTapped()) }
         }
-        .disabled(viewStore.fetchNumberFact)
         .alert(
             item: viewStore.binding(
                 get: { $0.numberFactAlert.map(FactAlert.init(title:)) },
@@ -43,7 +42,7 @@ struct AppView_Previews: PreviewProvider {
                 count: 0,
                 numberFactAlert: nil,
                 fetchNumberFact: false),
-            reducer: Reducer(AppState.reduceFlow),
+            reducer: Reducer(AppState.reduce),
             environment: ()
         )
     }
