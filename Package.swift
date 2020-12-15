@@ -30,6 +30,10 @@ let package = Package(
         .package(
             name: "Quick",
             url: "https://github.com/Quick/Quick.git", from: "3.0.0"),
+        .package(
+            name: "swift-composable-architecture",
+            url: "https://github.com/pointfreeco/swift-composable-architecture", from: "0.9.0")
+        
     ],
     targets: [
         .binaryTarget(
@@ -42,7 +46,8 @@ let package = Package(
 
         .target(
             name: "MaaS",
-            dependencies: ["MaasCore", "Swappable", "MaasTheme"],
+            dependencies: ["MaasCore", "Swappable", "MaasTheme",
+                           .product(name: "ComposableArchitecture", package: "swift-composable-architecture")],
             path: "ios/Sources/MaaS"),
 
         .testTarget(
