@@ -52,7 +52,8 @@ let package = Package(
 
         .testTarget(
             name: "MaasTests",
-            dependencies: ["MaaS", "SnapshotTesting", "Quick"],
+            dependencies: ["MaaS", "SnapshotTesting", "Quick",
+                           .product(name: "ComposableArchitecture", package: "swift-composable-architecture")],
             path: "ios/Tests/MaasTests",
             exclude: ["__Snapshots__"]),
 

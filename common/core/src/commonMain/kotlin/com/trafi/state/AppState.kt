@@ -6,8 +6,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
 
 data class AppState(
-    val count: Int,
-    val numberFactAlert: String?,
+    var count: Int,
+    var numberFactAlert: String?,
 ) : State<AppState, AppAction, AppEnvironment> {
     override fun reduce(
         action: AppAction,
