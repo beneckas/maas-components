@@ -8,8 +8,8 @@ import kotlinx.coroutines.flow.flow
 data class AppState(
     val count: Int,
     val numberFactAlert: String?,
-) : Reducer<AppState, AppAction, AppEnvironment> {
-    override fun AppState.reduce(
+) : State<AppState, AppAction, AppEnvironment> {
+    override fun reduce(
         action: AppAction,
         environment: AppEnvironment,
     ): Pair<AppState, Effect<AppAction>> = when (action) {

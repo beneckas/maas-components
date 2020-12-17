@@ -10,8 +10,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
-fun interface Reducer<State, Action, Environment> {
-    fun State.reduce(action: Action, environment: Environment): Pair<State, Effect<Action>>
+interface State<S: State<S, Action, Environment>, Action, Environment> {
+    fun reduce(action: Action, environment: Environment): Pair<S, Effect<Action>>
 }
 
 sealed class Effect<T> {
