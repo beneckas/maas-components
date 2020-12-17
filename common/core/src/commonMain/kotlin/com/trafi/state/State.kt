@@ -4,6 +4,7 @@ import io.ktor.utils.io.core.Closeable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.launchIn
@@ -20,9 +21,6 @@ sealed class Effect<T> {
 }
 class Effects<T>(val effects: List<Effect<T>>) : Effect<T>()
 
-fun <T> initFlowEffect(producer: ((T) -> Unit) -> Unit): Effect<T> = callbackFlow {
-    producer { offer(it) }
-}.effect()
 
 fun <T> Flow<T>.effect(cancellationId: String, cancelInFlight: Boolean = false): Effect<T> = Effect.Flow(CFlow(this, cancellationId, cancelInFlight))
 fun <T> Flow<T>.effect(): Effect<T> = Effect.Flow(CFlow(this))
@@ -41,6 +39,16 @@ class CFlow<T>(private val origin: Flow<T>, val cancellationId: String? = null, 
             }
         }
     }
+
+    constructor(producer: ((T) -> Unit) -> Unit, cancellationId: String, cancelInFlight: Boolean) : this(
+        callbackFlow {
+            producer { offer(it) }
+            awaitClose { }
+        },
+        cancellationId,
+        cancelInFlight
+    )
+
 }
 
 // class StateMachine<T : State<T, E>, E>(initial: T) {
