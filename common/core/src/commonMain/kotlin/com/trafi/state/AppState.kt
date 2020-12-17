@@ -1,15 +1,34 @@
 package com.trafi.state
 
 import com.trafi.core.ApiResult
+import com.trafi.state.AppAction.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
 
-class AppEnvironment {
-    var fetchNumberFact: (count: Int) -> Effect<AppAction> = { count ->
-        flow<AppAction> {
-            delay(1000)
-            AppAction.NumberFactResponse(ApiResult.Success("Number $count is great"))
-        }.effect("fetch-number-fact", cancelInFlight = true)
+data class AppState(
+    val count: Int,
+    val numberFactAlert: String?,
+) : Reducer<AppState, AppAction, AppEnvironment> {
+    override fun AppState.reduce(
+        action: AppAction,
+        environment: AppEnvironment,
+    ): Pair<AppState, Effect<AppAction>> = when (action) {
+        FactAlertDismissed -> {
+            copy(numberFactAlert = null) to Effect.None()
+        }
+        DecrementButtonTapped -> {
+            copy(count = this.count - 1) to Effect.None()
+        }
+        IncrementButtonTapped -> {
+            copy(count = this.count + 1) to Effect.None()
+        }
+        NumberFactButtonTapped -> {
+            this to environment.fetchNumberFact(count)
+        }
+        is NumberFactResponse -> {
+            copy(numberFactAlert = action.result.successValue
+                ?: "Could not load a number fact") to Effect.None()
+        }
     }
 }
 
@@ -21,34 +40,13 @@ sealed class AppAction {
     class NumberFactResponse(val result: ApiResult<String>) : AppAction()
 }
 
-data class AppState(
-    val count: Int,
-    val numberFactAlert: String?,
-    val fetchNumberFact: Boolean = false
-) : Reducer<AppState, AppAction, AppEnvironment> {
-    private fun reduceState(event: AppAction): AppState = when (event) {
-        AppAction.FactAlertDismissed -> copy(numberFactAlert = null)
-        AppAction.DecrementButtonTapped -> copy(count = count - 1)
-        AppAction.IncrementButtonTapped -> copy(count = count + 1)
-        AppAction.NumberFactButtonTapped -> copy(fetchNumberFact = true)
-        is AppAction.NumberFactResponse -> copy(
-            numberFactAlert = (event.result as? ApiResult.Success)?.value
-                ?: "Could not load a number fact",
-            fetchNumberFact = false
-        )
+class AppEnvironment {
+    var fetchNumberFact: (count: Int) -> Effect<AppAction> = { count ->
+        flow<AppAction> {
+            delay(1000)
+            NumberFactResponse(ApiResult.Success("Number $count is great"))
+        }.effect("fetch-number-fact", cancelInFlight = true)
     }
-
-    override fun AppState.reduce(
-        action: AppAction,
-        environment: AppEnvironment,
-    ): Pair<AppState, Effect<AppAction>> {
-        val state = reduceState(action)
-        val effect = if (state.fetchNumberFact) {
-            environment.fetchNumberFact(state.count)
-        } else {
-            Effect.None()
-        }
-        return state to effect
-    }
-
 }
+
+private val <T> ApiResult<T>.successValue: T? get() = (this as? ApiResult.Success)?.value
