@@ -10,17 +10,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
-interface State<out T : State<T, E>, E> {
-    fun reduce(event: E): Pair<T, Effect<E>>
-}
-
-class StateMachine<T : State<T, E>, E>(initial: T) {
-    private val _stateFlow = MutableStateFlow(initial)
-    val stateFlow: StateFlow<T> = _stateFlow
-
-    fun transition(event: E) {
-        _stateFlow.value = _stateFlow.value.reduce(event).first
-    }
+fun interface Reducer<State, Action, Environment> {
+    fun State.reduce(action: Action, environment: Environment): Pair<State, Effect<Action>>
 }
 
 sealed class Effect<T> {
@@ -28,9 +19,7 @@ sealed class Effect<T> {
     class Cancel<T>(val id: String) : Effect<T>()
     class None<T>: Effect<T>()
 }
-
 class Effects<T>(val effects: List<Effect<T>>) : Effect<T>()
-
 
 fun <T> Flow<T>.effect(cancellationId: String, cancelInFlight: Boolean = false): Effect<T> = Effect.Flow(CFlow(this, cancellationId, cancelInFlight))
 fun <T> Flow<T>.effect(): Effect<T> = Effect.Flow(CFlow(this))
@@ -50,3 +39,12 @@ class CFlow<T>(private val origin: Flow<T>, val cancellationId: String? = null, 
         }
     }
 }
+
+// class StateMachine<T : State<T, E>, E>(initial: T) {
+//     private val _stateFlow = MutableStateFlow(initial)
+//     val stateFlow: StateFlow<T> = _stateFlow
+//
+//     fun transition(event: E) {
+//         _stateFlow.value = _stateFlow.value.reduce(event).first
+//     }
+// }
