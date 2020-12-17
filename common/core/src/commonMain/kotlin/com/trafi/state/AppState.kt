@@ -44,7 +44,7 @@ class AppEnvironment {
     var fetchNumberFact: (count: Int) -> Effect<AppAction> = { count ->
         flow<AppAction> {
             delay(1000)
-            NumberFactResponse(ApiResult.Success("Number $count is great"))
+            emit(NumberFactResponse(ApiResult.Success("Number $count is great")))
         }.effect("fetch-number-fact", cancelInFlight = true)
     }
 }
