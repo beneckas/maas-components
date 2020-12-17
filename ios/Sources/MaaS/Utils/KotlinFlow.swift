@@ -1,10 +1,10 @@
 import ComposableArchitecture
 import Combine
 
-public extension Reducer where State: AnyObject, Action: AnyObject, Environment == Void {
-    init(_ reducer: @escaping (State) -> (Action) -> KotlinPair<State, MaasCore.Effect<Action>>) {
+public extension Reducer where State: AnyObject, Action: AnyObject {
+    init(_ reducer: @escaping (State) -> (Action, Environment) -> KotlinPair<State, MaasCore.Effect<Action>>) {
         self.init { state, action, env in
-            let pair = reducer(state)(action)
+            let pair = reducer(state)(action, env)
             state = pair.first ?? state
             return .from(pair.second)
         }
@@ -33,6 +33,27 @@ private extension ComposableArchitecture.Effect where Output: AnyObject, Failure
         } else {
             return effect
         }
+    }
+}
+
+extension Publisher where Output: AnyObject, Failure == Never {
+
+    func eraseToEffect(cancellationId: String? = nil, cancelInFlight: Bool = false) -> MaasCore.Effect<Output> {
+        EffectFlow(
+            flow: CFlow(
+                producer: { callback in
+                    let cancellable = self.sink {
+                        _ = callback($0)
+                    }
+                    return {
+                        cancellable.cancel()
+                        return KotlinUnit()
+                    }
+                },
+                cancellationId: cancellationId,
+                cancelInFlight: cancelInFlight
+            )
+        )
     }
 }
 

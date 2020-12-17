@@ -40,10 +40,10 @@ class CFlow<T>(private val origin: Flow<T>, val cancellationId: String? = null, 
         }
     }
 
-    constructor(producer: ((T) -> Unit) -> Unit, cancellationId: String, cancelInFlight: Boolean) : this(
+    constructor(producer: ((T) -> Unit) -> () -> Unit, cancellationId: String?, cancelInFlight: Boolean) : this(
         callbackFlow {
-            producer { offer(it) }
-            awaitClose { }
+            val close = producer { offer(it) }
+            awaitClose { close() }
         },
         cancellationId,
         cancelInFlight
