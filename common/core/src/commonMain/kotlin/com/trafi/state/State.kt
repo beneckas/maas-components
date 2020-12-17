@@ -5,8 +5,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
@@ -20,6 +19,10 @@ sealed class Effect<T> {
     class None<T>: Effect<T>()
 }
 class Effects<T>(val effects: List<Effect<T>>) : Effect<T>()
+
+fun <T> initFlowEffect(producer: ((T) -> Unit) -> Unit): Effect<T> = callbackFlow {
+    producer { offer(it) }
+}.effect()
 
 fun <T> Flow<T>.effect(cancellationId: String, cancelInFlight: Boolean = false): Effect<T> = Effect.Flow(CFlow(this, cancellationId, cancelInFlight))
 fun <T> Flow<T>.effect(): Effect<T> = Effect.Flow(CFlow(this))
