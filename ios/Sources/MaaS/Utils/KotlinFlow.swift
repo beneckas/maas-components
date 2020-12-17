@@ -39,16 +39,24 @@ private extension ComposableArchitecture.Effect where Output: AnyObject, Failure
 extension Publisher where Output: AnyObject, Failure == Never {
 
     func eraseToEffect(cancellationId: String? = nil, cancelInFlight: Bool = false) -> MaasCore.Effect<Output> {
-        EffectFlow(
+        var completion: (() -> ())!
+        return EffectFlow(
             flow: CFlow(
                 producer: { callback in
-                    let cancellable = self.sink {
-                        _ = callback($0)
-                    }
+                    let cancellable = self
+                        .handleEvents(receiveCompletion: { _ in
+                            completion()
+                        })
+                        .sink {
+                            _ = callback($0)
+                        }
                     return {
                         cancellable.cancel()
                         return KotlinUnit()
                     }
+                },
+                completed: { completed in
+                    completion = { _ = completed() }
                 },
                 cancellationId: cancellationId,
                 cancelInFlight: cancelInFlight
@@ -71,6 +79,8 @@ private extension Publishers {
             self.closable = flow.watch {
                 guard let e = $0 else { return }
                 _ = subscriber.receive(e)
+            } completion: {
+                subscriber.receive(completion: .finished)
             }
         }
 

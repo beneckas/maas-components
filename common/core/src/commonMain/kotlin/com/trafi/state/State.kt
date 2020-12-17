@@ -5,10 +5,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 
 interface State<S: State<S, Action, Environment>, Action, Environment> {
     fun reduce(action: Action, environment: Environment): Pair<S, Effect<Action>>
@@ -26,11 +23,13 @@ fun <T> Flow<T>.effect(cancellationId: String, cancelInFlight: Boolean = false):
 fun <T> Flow<T>.effect(): Effect<T> = Effect.Flow(CFlow(this))
 
 class CFlow<T>(private val origin: Flow<T>, val cancellationId: String? = null, val cancelInFlight: Boolean = true) : Flow<T> by origin {
-    fun watch(block: (T) -> Unit): Closeable {
+    fun watch(block: (T) -> Unit, completion: () -> Unit): Closeable {
         val job = Job(/*ConferenceService.coroutineContext[Job]*/)
 
         onEach {
             block(it)
+        }.onCompletion {
+            completion()
         }.launchIn(CoroutineScope(Dispatchers.Main + job))
 
         return object : Closeable {
@@ -40,10 +39,11 @@ class CFlow<T>(private val origin: Flow<T>, val cancellationId: String? = null, 
         }
     }
 
-    constructor(producer: ((T) -> Unit) -> () -> Unit, cancellationId: String?, cancelInFlight: Boolean) : this(
+    constructor(producer: ((T) -> Unit) -> () -> Unit, completed: (() -> Unit) -> Unit, cancellationId: String?, cancelInFlight: Boolean) : this(
         callbackFlow {
-            val close = producer { offer(it) }
-            awaitClose { close() }
+            completed { close() }
+            val cancellation = producer { offer(it) }
+            awaitClose { cancellation() }
         },
         cancellationId,
         cancelInFlight
